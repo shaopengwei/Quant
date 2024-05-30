@@ -17,32 +17,104 @@ class StrategyTest(bt.Strategy):
     """
     主策略程序
     """
-    params = (("maperiod", 20),)  # 全局设定交易策略的参数
+    params = (("maperiod", 20), ('printlog', False),)  # 全局设定交易策略的参数
+
+    def log(self, txt, dt=None, doprint=False):
+        if self.params.printlog or doprint:
+            ''' Logging function fot this strategy'''
+            dt = dt or self.datas[0].datetime.date(0)
+            print('%s, %s' % (dt.isoformat(), txt))
 
     def __init__(self):
-        """
-        初始化函数
-        """
-        self.data_close = self.datas[0].close  # 指定价格序列
-        # 初始化交易指令、买卖价格和手续费
+        # Keep a reference to the "close" line in the data[0] dataseries
+        self.dataclose = self.datas[0].close
+
+        # To keep track of pending orders and buy price/commission
         self.order = None
-        self.buy_price = None
-        self.buy_comm = None
-        # 添加移动均线指标
+        self.buyprice = None
+        self.buycomm = None
+
+        # Add a MovingAverageSimple indicator
         self.sma = bt.indicators.SimpleMovingAverage(
-            self.datas[0], period=self.params.maperiod
-        )
+            self.datas[0], period=self.params.maperiod)
+
+        bt.indicators.ExponentialMovingAverage(self.datas[0], period=self.params.maperiod)
+        bt.indicators.WeightedMovingAverage(self.datas[0], period=self.params.maperiod).subplot = True
+        bt.indicators.StochasticSlow(self.datas[0])
+        bt.indicators.MACDHisto(self.datas[0])
+        rsi = bt.indicators.RSI(self.datas[0])
+        bt.indicators.SmoothedMovingAverage(rsi, period=10)
+        bt.indicators.ATR(self.datas[0]).plot = False
+
+    def notify_order(self, order):
+        if order.status in [order.Submitted, order.Accepted]:
+            # Buy/Sell order submitted/accepted to/by broker - Nothing to do
+            return
+
+        # Check if an order has been completed
+        # Attention: broker could reject order if not enough cash
+        if order.status in [order.Completed]:
+            if order.isbuy():
+                self.log(
+                    'BUY EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
+                    (order.executed.price,
+                     order.executed.value,
+                     order.executed.comm))
+
+                self.buyprice = order.executed.price
+                self.buycomm = order.executed.comm
+            else:  # Sell
+                self.log('SELL EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
+                         (order.executed.price,
+                          order.executed.value,
+                          order.executed.comm))
+
+            self.bar_executed = len(self)
+
+        elif order.status in [order.Canceled, order.Margin, order.Rejected]:
+            self.log('Order Canceled/Margin/Rejected')
+
+        self.order = None
+
+    def notify_trade(self, trade):
+        if not trade.isclosed:
+            return
+
+        self.log('OPERATION PROFIT, GROSS %.2f, NET %.2f' %
+                 (trade.pnl, trade.pnlcomm))
 
     def next(self):
-        """
-        执行逻辑
-        """
-        if self.order:  # 检查是否有指令等待执行,
+        # Simply log the closing price of the series from the reference
+        self.log('Close, %.2f' % self.dataclose[0])
+
+        # Check if an order is pending ... if yes, we cannot send a 2nd one
+        if self.order:
             return
-        # 检查是否持仓
-        if not self.position:  # 没有持仓
-            if self.data_close[0] > self.sma[0]:  # 执行买入条件判断：收盘价格上涨突破20日均线
-                self.order = self.buy(size=100)  # 执行买入
+
+        # Check if we are in the market
+        if not self.position:
+
+            # Not yet ... we MIGHT BUY if ...
+            if self.dataclose[0] > self.sma[0]:
+                # BUY, BUY, BUY!!! (with all possible default parameters)
+                self.log('BUY CREATE, %.2f' % self.dataclose[0])
+
+                # Keep track of the created order to avoid a 2nd order
+                self.order = self.buy()
+
         else:
-            if self.data_close[0] < self.sma[0]:  # 执行卖出条件判断：收盘价格跌破20日均线
-                self.order = self.sell(size=100)  # 执行卖出
+
+            if self.dataclose[0] < self.sma[0]:
+                # SELL, SELL, SELL!!! (with all possible default parameters)
+                self.log('SELL CREATE, %.2f' % self.dataclose[0])
+
+                # Keep track of the created order to avoid a 2nd order
+                self.order = self.sell()
+
+    def stop(self):
+        """
+        the stop method, which will be called when the data has been exhausted and backtesting is over.
+        It’s used to print the final net value of the portfolio in the broker (it was done in Cerebro previously)
+        """
+        self.log('(MA Period %2d) Ending Value %.2f' %
+                 (self.params.maperiod, self.broker.getvalue()), doprint=True)

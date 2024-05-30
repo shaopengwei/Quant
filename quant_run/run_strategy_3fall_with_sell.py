@@ -19,6 +19,8 @@ if __name__ == '__main__':
 
     cerebro.broker.setcash(100000.0)
     cerebro.broker.setcommission(commission=0.002)
+    # Add a FixedSize sizer according to the stake
+    cerebro.addsizer(bt.sizers.FixedSize, stake=10)
 
     akshareDataSource = AkshareStock()
     stock_hfq_df = akshareDataSource.get_stock_history(symbol="600887", adjust="qfq")

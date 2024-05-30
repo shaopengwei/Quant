@@ -22,8 +22,15 @@ com.quant.backtrader
 
 ## 2.Backtrader 数据
 
-Backtrader 使用 data feeds 接收外部数据。 Backtrader 底层数据采用了特殊的内部格式，就是Lines，
-用于存储和传递内部数据流。 OHLC 金融数据中的每一列相当于 Lines 的数据组。
+### 2.1 Lines
+A line is a succession of points that when joined together form this line. OHLC 数据字段
+格式是金融行业的标准数据格式，即open（开盘价）/high（最高价）/low（最低价） /close（收盘价），
+另外 OHLC 数据还包含datetime（时间/日期）、volume（成交量）、openinterest （持仓量） 等其他字段
+OHLC 金融数据中的每一列相当于一个 Lines。
+
+### 2.2 Index 0 Approach
+When accessing the values in a line, the current value is accessed with index: 0，方便 Python
+的数组遍历，And the “last” output value is accessed with -1. 
 
 ## 3.Backtrader 策略运行逻辑
 按照时间顺序，以bar为单位读取 data feeds 数据，每一个bar执行策略的next方法，

@@ -30,4 +30,4 @@ class Fall3Days(bt.Strategy):
                 # 符合三连跌买入
                 # 标记买入操作
                 self.log('执行买入，买入价格为：%.2f' % self.dataclose[0])
-                self.buy()
+                self.buy() # 默认买入一手，方法很灵活，具体使用参考文档

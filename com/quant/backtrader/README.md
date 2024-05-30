@@ -22,7 +22,18 @@ com.quant.backtrader
 
 ## 2.Backtrader 数据
 
-Backtrader 底层数据采用了特殊的内部格式，就是Lines，用于存储和传递内部数据流。
-OHLC 金融数据中的每一列相当于 Lines 的数据组。
+Backtrader 使用 data feeds 接收外部数据。 Backtrader 底层数据采用了特殊的内部格式，就是Lines，
+用于存储和传递内部数据流。 OHLC 金融数据中的每一列相当于 Lines 的数据组。
+
+## 3.Backtrader 策略运行逻辑
+按照时间顺序，以bar为单位读取 data feeds 数据，每一个bar执行策略的next方法，
+next方法中可以下订单、 通知交易员执行订单等操作。
+
+>1.Deliver any store notifications 
+>>2.Ask data feeds to deliver the next set of ticks/bars
+>>>3.Notify the strategy about queued broker notifications of orders, trades and cash/value
+>>>>4.Tell the broker to accept queued orders and execute the pending orders with the new data
+>>>>>5.Call the strategies’ ***next*** method to let the strategy evaluate the new data (and maybe issue orders which are queued in the broker)
+>>>>>>6.Tell any writers to write the data to its target
 
 # 接口列表

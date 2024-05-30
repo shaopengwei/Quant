@@ -11,25 +11,20 @@
 """
 
 import matplotlib.pyplot as plt
-import akshare as ak
-import pandas as pd
 import backtrader as bt
 from datetime import datetime
+from com.quant.datasource.akshare_stock import AkshareStock
 
-from com.quant.strategy.strategy_test import StrategyTest
+from com.quant.trade_strategy.strategy_test import StrategyTest
 
 if __name__ == '__main__':
     cerebro = bt.Cerebro()  # 初始化回测系统
 
     # 获取回测数据
     # 利用 AKShare 获取股票的后复权数据
-    stock_hfq_df = ak.stock_zh_a_hist(symbol="000001", adjust="hfq").iloc[:, 0:8]
-    del stock_hfq_df['股票代码']
-    # 按照 bt.feeds.pandasdata 列名重新命名
-    stock_hfq_df.columns = bt.feeds.PandasData.datafields
-    # 将日期列转换成 datetime类型，设置为索引，索引名为 datetime
-    stock_hfq_df.index = pd.to_datetime(stock_hfq_df['datetime'])
-    data = bt.feeds.PandasData(dataname=stock_hfq_df)
+    akshareDataSource = AkshareStock()
+    stock_hfq_df = akshareDataSource.get_stock_history(symbol="000001", adjust="hfq")
+    data = bt.feeds.PandasData(dataname = stock_hfq_df)
     cerebro.adddata(data)  # 将数据传入回测系统
 
     # 获取回测策略

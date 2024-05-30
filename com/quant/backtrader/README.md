@@ -22,6 +22,7 @@ com.quant.backtrader
 
 ## 2.Backtrader 数据
 
-Backtrader 底层数据采用了特殊的内部格式，就是Lines，用于存储和传递内部数据流。OHLC 金融数据中的每一列相当于 Lines 的数据组。
+Backtrader 底层数据采用了特殊的内部格式，就是Lines，用于存储和传递内部数据流。
+OHLC 金融数据中的每一列相当于 Lines 的数据组。
 
 # 接口列表

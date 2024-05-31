@@ -38,9 +38,8 @@ if __name__ == '__main__':
 
     print('\n4. 完成量化回测')
 
-    dval9 = cerebro.broker.getvalue()
     print('\t 起始资金：%.2f' % dcash0)
-    print('\t 剩余资金：%.2f' % dval9)
+    print('\t 剩余资金：%.2f' % cerebro.broker.getvalue())
 
     print('\n5. 绘制 BT 量化分析图形')
     cerebro.plot()

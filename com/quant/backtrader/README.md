@@ -43,4 +43,33 @@ next方法中可以下订单、 通知交易员执行订单等操作。
 >>>>>5.Call the strategies’ ***next*** method to let the strategy evaluate the new data (and maybe issue orders which are queued in the broker)
 >>>>>>6.Tell any writers to write the data to its target
 
+## 4.Plot 绘图
+默认的绘图操作会默认添加3个观察者
+```
+cerebro.plot()
+
+The chart includes 3 Observers
+
+1. A CashValue observer which as the name implies keeps track of the Cash and total 
+portolio Value (including cash) during the life of the backtesting run
+
+2. A Trade Observer which shows, at the end of a trade, the actual Profit and Loss. 
+
+3. A BuySell observer which plots (on top of the prices) where buy and sell operations 
+have taken place
+```
+通过 stdstats 字段控制是否启用
+
+```
+cerebro = bt.Cerebro(stdstats=False)
+``` 
+
+or 
+```
+cerebro = bt.Cerebro()
+...
+cerebro.run(stdstats=False)
+```
+
+
 # 接口列表
